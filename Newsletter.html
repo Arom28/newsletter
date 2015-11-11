@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Newsletter</title>
+	
+	<!-- CKEditor + jQuery -->
+	<script src="js/ckeditor/ckeditor.js"></script>
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
+
+	<script type="text/javascript">
+
+		//Permet aux elements de la newsletter d'être déplacable
+		$(document).ready(function(){
+			$( "#contenu" ).sortable({handle: ".drag, .ligne"});
+			$( "#contenu" ).draggable({handle: ".drag, .ligne"});
+		});
+
+		//Fonction permettant d'ajouter des éléments à la newsletter
+		function ajouterContenu(nCol, type)
+		{
+			//Création d'un tableau
+			var ligne = $('<table style="table-layout: fixed; width: 100%; position: relative; margin: 2px 0;"></table>');
+
+			//Ajout du nombre de colonne donnée en paramètre
+			if (nCol == 1) {
+				ligne.append($('<td style="width: 100%"><div contenteditable="true" style="padding: 30px"></div></td>'));
+			}
+			else if (nCol == 2) {
+				ligne.append($('<td style="width: 50%"><div contenteditable="true" style="padding: 30px 15px 30px 30px"></div></td>'));
+				ligne.append($('<td style="width: 50%"><div contenteditable="true" style="padding: 30px 30px 30px 15px"></div></td>'));
+			}
+			else if (nCol == 3) {
+				ligne.append($('<td style="width: 33%"><div contenteditable="true" style="padding: 30px 15px 30px 30px"></div></td>'));
+				ligne.append($('<td style="width: 34%"><div contenteditable="true" style="padding: 30px 15px"></div></td>'));
+				ligne.append($('<td style="width: 33%"><div contenteditable="true" style="padding: 30px 30px 30px 15px"></div></td>'));
+			}
+
+			//Ajout du style donné en paramètre
+			if (type == 1){
+				ligne.css('border', '1px solid lightgray')
+			}
+			else if (type == 2){
+				ligne.css('background-color', 'lightgray')
+			}
+
+			//Définition des événements quand l'élément est survolé
+			ligne.hover(
+				function(){
+					//Apparition d'un bouton pour supprimer l'élément
+					$(this).append($('<button class="delete" type="button" style="position: absolute; right: 0; top: 0">x</button>'));
+					//Apparition d'une zone pour déplacer l'élément
+					$(this).append($('<div class="drag" style="position: absolute; left: 0; top: 0; border: 1px solid gray; height:20px"><img src="img/draggable.png" width="20"></div>'));
+					//Lorsque le bouton supprimer est survolé, l'élément est entouré en rouge
+					$('.delete').hover(
+						function() {
+							ligne.css('outline', 'red solid 1px');
+						},
+						function() {
+							ligne.css('outline', 'none');
+						}
+					);
+					//Suppression de l'élément lors d'un click sur le bouton supprimer
+					$('.delete').click(function(){
+						if (confirm("Supprimer ?")) ligne.remove();
+					});
+					//Lorsque la zone de déplacement est survolée, l'élément est entouré en rouge
+					$('.drag').hover(
+						function() {
+							ligne.css('outline', 'red solid 1px');
+						},
+						function() {
+							ligne.css('outline', 'none');
+						}
+					);
+				},
+				//Lorsque la souris quitte la zone, suppression du bouton supprimer et de la zone de déplacement
+				function(){
+					$('.delete').remove();
+					$('.drag').remove();
+				}
+			);
+
+			//Ajout de l'élément à la zone modifiable de la newsletter
+			$("#contenu").append(ligne);
+
+			//Réinitialisation des instance CKEditor
+			for (var instance in CKEDITOR.instances) {
+				CKEDITOR.instances[instance].destroy();
+			}
+			CKEDITOR.inlineAll();
+		}
+
+		//Fonction permettant d'ajouter un ligne de séparation à la newsletter
+		function ajouterLigne()
+		{
+			//Création de l'élément
+			var ligne = $('<table style="table-layout: fixed; width: 100%; position: relative; border-spacing:0px"><td class="ligne" style="width: 100%; border-top: 1px solid lightgray;"><td></table>');
+
+			//Définition des événements quand l'élément est survolé
+			ligne.hover(
+				function(){
+					//Apparition d'un bouton pour supprimer l'élément
+					$(this).append($('<button class="delete" type="button" style="position: absolute; top: -8px; right: -23px">x</button>'));
+					//La ligne s'épaissit pour faciliter la manipulation
+					$('.ligne', this).css('border-top-width', '5px');
+					//Lorsque le bouton supprimer est survolé, l'élément est entouré en rouge
+					$('.delete').hover(
+						function() {
+							ligne.css('outline', 'red solid 1px');
+						},
+						function() {
+							ligne.css('outline', 'none');
+						}
+					);
+					//Suppression de l'élément lors d'un click sur le bouton supprimer
+					$('.delete').click(function(){
+						if (confirm("Supprimer ?")) ligne.remove();
+					})
+				},
+				//Lorsque la souris quitte la zone, suppression du bouton supprimer et la ligne récupère sont épaisseur initiale
+				function(){
+					$('.delete').remove();
+					$('.ligne', this).css('border-top-width', '1px');
+				}
+			);
+
+			//Ajout de l'élément à la zone modifiable de la newsletter
+			$("#contenu").append(ligne);
+		}
+
+		//Fonction qui supprime l'élément demandé sur confirmation
+		function suppContenu()
+		{
+			if (confirm("Tout supprimer ?")) $("#contenu").empty();
+		}
+
+	</script>
+
+</head>
+
+<body>
+
+	<div style="width: 800px; margin: auto; font-family: Century Gothic">
+		<!-- Titre -->
+		<div style="text-align: center">
+			<h1>Création d'une Newsletter</h1>
+		</div>
+
+		<!-- Formulaire pour la création d'une newsletter -->
+		<form action="Back_PublierNewsletter.php" method="post" name = "PubliNewsletter" onsubmit="return valider()" enctype="multipart/form-data" style="width: 90%; margin: auto">
+		<h4>Contenu de la newsletter</h4>
+		<div style="margin: 10px 0">
+			<!-- bouton pour la rédaction de la newsletter -->
+			<button type='button' onclick="ajouterContenu(1,0)" style="float: left; margin-bottom: 10px">1 colonne</button>
+			<button type='button' onclick="ajouterContenu(2,0)" style="float: left; margin-bottom: 10px">2 colonnes</button>
+			<button type='button' onclick="ajouterContenu(3,0)" style="float: left; margin-bottom: 10px">3 colonnes</button>
+			<button type='button' onclick="ajouterLigne()" style="float: left; margin-bottom: 10px">Ligne</button>
+			<button type='button' onclick="ajouterContenu(1,1)" style="float: left; margin-bottom: 10px">Cadre</button>
+			<button type='button' onclick="ajouterContenu(1,2)" style="float: left; margin-bottom: 10px">Fond</button>
+			<button type='button' onclick="suppContenu()" style="float: right; margin-bottom: 10px">Tout supprimer</button>
+		</div>
+		
+		<div id = "contenuNews" style="border: 1px solid gray; overflow-x: auto; padding: 20px; clear: both;">
+			<!-- newsletter -->
+			<center>
+				<table style="max-width: 100%; border-collapse: inherit; border-spacing: 1px">
+					<tbody>
+					<!-- header de la newsletter -->
+					<tr style="background-color: lightgreen; text-align: center; height: 100px">
+						<td style="width: 600px">
+							<div style="background-color: grey; color: white; width:100px; height: 80px; margin: auto; vertical-align: middle; font-size: 30px">LOGO</div>
+						</td>
+					</tr>
+					<!-- contenu de la newsletter -->
+					<tr style="background-color: white;">
+						<td id="contenu"  style="width: 600px; font-size: 14px">
+							<!-- les éléments ajoutés s'insèrent ici -->
+						</td>
+					</tr>
+					<!-- header de la newsletter -->
+					<tr style="background-color: lightgreen; height: 50px;">
+						<td  style="width: 600px">
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</center>
+		</div>
+		</form>
+	</div>
+
+</body>
+</html>
